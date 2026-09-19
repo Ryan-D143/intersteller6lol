@@ -22,6 +22,7 @@ const routes = [
   { path: '/diagnostic', file: 'settings.html' },
   { path: '/local-news', file: 'tabs.html' },
   { path: '/image-galleries', file: 'go.html' },
+  { path: '/fitness', file: 'fitness.html' },
 ];
 
 app.get('/edu/*', cors({ origin: false }), async (req, res, next) => {

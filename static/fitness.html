@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitness Tracker</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e8eaed;
+    --text-dim: #9aa1ac;
+    --accent: #4f8cff;
+    --accent-2: #34d399;
+    --danger: #f87171;
+    --warn: #fbbf24;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--panel);
+    padding: 4px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    font-size: 1rem;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  input, select {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+  input:focus, select:focus { outline: 1px solid var(--accent); }
+  .row {
+    display: flex;
+    gap: 10px;
+  }
+  .row > * { flex: 1; }
+  .field { margin-bottom: 10px; }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.82rem;
+  }
+  button.ghost:hover { color: var(--text); border-color: var(--accent); }
+  button.icon-danger {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button.icon-danger:hover { color: var(--danger); }
+  .set-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .set-row span.idx {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    text-align: center;
+  }
+  .exercise-block {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    background: var(--panel-2);
+  }
+  .exercise-block .ex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .exercise-block .ex-header strong { font-size: 0.92rem; }
+  .empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 24px 0;
+  }
+  .history-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--panel-2);
+  }
+  .history-item .h-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .history-item .h-top .meta { font-size: 0.78rem; color: var(--text-dim); }
+  .history-item .h-detail {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: none;
+  }
+  .history-item .h-detail.open { display: block; }
+  .ex-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .ex-line:last-child { border-bottom: none; }
+  .pill {
+    display: inline-block;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-right: 6px;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .stat-box {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-box .num {
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+  .stat-box .lbl {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .progress-outer {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    height: 14px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .progress-inner {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .2s ease;
+  }
+  .food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .food-item:last-child { border-bottom: none; }
+  .food-item .fname { font-size: 0.88rem; }
+  .food-item .fsub { font-size: 0.72rem; color: var(--text-dim); }
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .date-nav button {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .date-nav .date-label { font-weight: 600; font-size: 0.9rem; }
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: repeat(3, 1fr); }
+    header h1 { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏋️ Fitness Tracker</h1>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="workouts">Workouts</button>
+    <button class="tab-btn" data-view="calories">Calories</button>
+    <button class="tab-btn" data-view="history">History</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- WORKOUTS VIEW -->
+  <section id="view-workouts" class="view active">
+    <div class="card">
+      <h2>New Workout</h2>
+      <div class="field">
+        <label>Workout name (optional)</label>
+        <input id="workout-name" type="text" placeholder="e.g. Push Day">
+      </div>
+      <div id="exercise-list"></div>
+      <button class="ghost" id="add-exercise-btn" type="button">+ Add Exercise</button>
+    </div>
+
+    <div class="card" style="display:flex; justify-content:flex-end;">
+      <button class="primary" id="save-workout-btn" type="button">Save Workout</button>
+    </div>
+  </section>
+
+  <!-- CALORIES VIEW -->
+  <section id="view-calories" class="view">
+    <div class="card">
+      <div class="date-nav">
+        <button id="cal-prev" type="button">‹</button>
+        <div class="date-label" id="cal-date-label">Today</div>
+        <button id="cal-next" type="button">›</button>
+      </div>
+
+      <div class="row" style="margin-bottom:12px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>Daily calorie goal</label>
+          <input id="cal-goal" type="number" min="0" placeholder="2000">
+        </div>
+      </div>
+
+      <div id="cal-summary"></div>
+      <div class="progress-outer"><div class="progress-inner" id="cal-progress" style="width:0%;"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Log Food</h2>
+      <div class="field">
+        <label>Food / meal name</label>
+        <input id="food-name" type="text" placeholder="e.g. Chicken & Rice">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Calories</label>
+          <input id="food-cal" type="number" min="0" placeholder="500">
+        </div>
+        <div class="field">
+          <label>Protein (g)</label>
+          <input id="food-protein" type="number" min="0" placeholder="0">
+        </div>
+      </div>
+      <button class="primary" id="add-food-btn" type="button">Add Entry</button>
+    </div>
+
+    <div class="card">
+      <h2>Today's Log</h2>
+      <div id="food-list"></div>
+    </div>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section id="view-history" class="view">
+    <div class="card">
+      <h2>Workout History</h2>
+      <div id="workout-history"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEYS = {
+    workouts: "ft_workouts",
+    food: "ft_food",
+    goal: "ft_cal_goal"
+  };
+
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function save(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+  }
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+  function todayKey(d) {
+    d = d || new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function formatDateLabel(key) {
+    var parts = key.split("-").map(Number);
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    var todayStr = todayKey();
+    if (key === todayStr) return "Today";
+    var yest = new Date();
+    yest.setDate(yest.getDate() - 1);
+    if (key === todayKey(yest)) return "Yesterday";
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  var state = {
+    workouts: load(STORAGE_KEYS.workouts, []),
+    food: load(STORAGE_KEYS.food, {}),
+    goal: load(STORAGE_KEYS.goal, 2000),
+    calDate: todayKey(),
+    exercises: []
+  };
+
+  // ---------- Tabs ----------
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  var views = document.querySelectorAll(".view");
+  tabBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      tabBtns.forEach(function (b) { b.classList.remove("active"); });
+      views.forEach(function (v) { v.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("view-" + btn.dataset.view).classList.add("active");
+      if (btn.dataset.view === "history") renderHistory();
+      if (btn.dataset.view === "calories") renderCalories();
+    });
+  });
+
+  // ---------- Workout builder ----------
+  var exerciseListEl = document.getElementById("exercise-list");
+
+  function addExercise() {
+    state.exercises.push({ id: uid(), name: "", sets: [{ reps: "", weight: "" }] });
+    renderExercises();
+  }
+
+  function renderExercises() {
+    exerciseListEl.innerHTML = "";
+    if (state.exercises.length === 0) {
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No exercises yet. Add one to get started.";
+      exerciseListEl.appendChild(empty);
+      return;
+    }
+    state.exercises.forEach(function (ex, exIdx) {
+      var block = document.createElement("div");
+      block.className = "exercise-block";
+
+      var header = document.createElement("div");
+      header.className = "ex-header";
+
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.placeholder = "Exercise name (e.g. Bench Press)";
+      nameInput.value = ex.name;
+      nameInput.style.marginRight = "8px";
+      nameInput.addEventListener("input", function () { ex.name = nameInput.value; });
+
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "icon-danger";
+      removeBtn.type = "button";
+      removeBtn.textContent = "✕";
+      removeBtn.title = "Remove exercise";
+      removeBtn.addEventListener("click", function () {
+        state.exercises.splice(exIdx, 1);
+        renderExercises();
+      });
+
+      header.appendChild(nameInput);
+      header.appendChild(removeBtn);
+      block.appendChild(header);
+
+      ex.sets.forEach(function (set, setIdx) {
+        var row = document.createElement("div");
+        row.className = "set-row";
+
+        var idx = document.createElement("span");
+        idx.className = "idx";
+        idx.textContent = setIdx + 1;
+
+        var repsInput = document.createElement("input");
+        repsInput.type = "number";
+        repsInput.min = "0";
+        repsInput.placeholder = "Reps";
+        repsInput.value = set.reps;
+        repsInput.addEventListener("input", function () { set.reps = repsInput.value; });
+
+        var weightInput = document.createElement("input");
+        weightInput.type = "number";
+        weightInput.min = "0";
+        weightInput.step = "0.5";
+        weightInput.placeholder = "Weight (lbs)";
+        weightInput.value = set.weight;
+        weightInput.addEventListener("input", function () { set.weight = weightInput.value; });
+
+        var delSetBtn = document.createElement("button");
+        delSetBtn.className = "icon-danger";
+        delSetBtn.type = "button";
+        delSetBtn.textContent = "✕";
+        delSetBtn.addEventListener("click", function () {
+          ex.sets.splice(setIdx, 1);
+          if (ex.sets.length === 0) ex.sets.push({ reps: "", weight: "" });
+          renderExercises();
+        });
+
+        row.appendChild(idx);
+        row.appendChild(repsInput);
+        row.appendChild(weightInput);
+        row.appendChild(delSetBtn);
+        block.appendChild(row);
+      });
+
+      var addSetBtn = document.createElement("button");
+      addSetBtn.className = "ghost";
+      addSetBtn.type = "button";
+      addSetBtn.textContent = "+ Add Set";
+      addSetBtn.style.marginTop = "4px";
+      addSetBtn.addEventListener("click", function () {
+        ex.sets.push({ reps: "", weight: "" });
+        renderExercises();
+      });
+      block.appendChild(addSetBtn);
+
+      exerciseListEl.appendChild(block);
+    });
+  }
+
+  document.getElementById("add-exercise-btn").addEventListener("click", addExercise);
+
+  document.getElementById("save-workout-btn").addEventListener("click", function () {
+    var validExercises = state.exercises
+      .filter(function (ex) { return ex.name.trim() !== ""; })
+      .map(function (ex) {
+        return {
+          name: ex.name.trim(),
+          sets: ex.sets
+            .filter(function (s) { return s.reps !== "" || s.weight !== ""; })
+            .map(function (s) { return { reps: Number(s.reps) || 0, weight: Number(s.weight) || 0 }; })
+        };
+      })
+      .filter(function (ex) { return ex.sets.length > 0; });
+
+    if (validExercises.length === 0) {
+      alert("Add at least one exercise with a set before saving.");
+      return;
+    }
+
+    var workout = {
+      id: uid(),
+      name: document.getElementById("workout-name").value.trim() || "Workout",
+      date: new Date().toISOString(),
+      exercises: validExercises
+    };
+    state.workouts.unshift(workout);
+    save(STORAGE_KEYS.workouts, state.workouts);
+
+    document.getElementById("workout-name").value = "";
+    state.exercises = [];
+    renderExercises();
+    alert("Workout saved 💪");
+  });
+
+  addExercise();
+
+  // ---------- History ----------
+  var historyEl = document.getElementById("workout-history");
+
+  function volumeOf(workout) {
+    var vol = 0;
+    workout.exercises.forEach(function (ex) {
+      ex.sets.forEach(function (s) { vol += (s.reps || 0) * (s.weight || 0); });
+    });
+    return vol;
+  }
+
+  function renderHistory() {
+    historyEl.innerHTML = "";
+    if (state.workouts.length === 0) {
+      historyEl.innerHTML = '<div class="empty">No workouts logged yet.</div>';
+      return;
+    }
+    state.workouts.forEach(function (w) {
+      var item = document.createElement("div");
+      item.className = "history-item";
+
+      var top = document.createElement("div");
+      top.className = "h-top";
+      var d = new Date(w.date);
+      top.innerHTML =
+        '<div><strong>' + escapeHtml(w.name) + '</strong><div class="meta">' +
+        d.toLocaleDateString() + ' &middot; ' + w.exercises.length + ' exercises &middot; ' +
+        volumeOf(w).toLocaleString() + ' lbs volume</div></div>';
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "icon-danger";
+      delBtn.textContent = "🗑";
+      delBtn.title = "Delete workout";
+      delBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (confirm("Delete this workout?")) {
+          state.workouts = state.workouts.filter(function (x) { return x.id !== w.id; });
+          save(STORAGE_KEYS.workouts, state.workouts);
+          renderHistory();
+        }
+      });
+      top.appendChild(delBtn);
+
+      var detail = document.createElement("div");
+      detail.className = "h-detail";
+      w.exercises.forEach(function (ex) {
+        var line = document.createElement("div");
+        line.className = "ex-line";
+        var setsText = ex.sets.map(function (s) { return s.reps + "×" + s.weight; }).join(", ");
+        line.innerHTML = "<span>" + escapeHtml(ex.name) + "</span><span>" + escapeHtml(setsText) + "</span>";
+        detail.appendChild(line);
+      });
+
+      top.addEventListener("click", function () {
+        detail.classList.toggle("open");
+      });
+
+      item.appendChild(top);
+      item.appendChild(detail);
+      historyEl.appendChild(item);
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  // ---------- Calories ----------
+  var goalInput = document.getElementById("cal-goal");
+  goalInput.value = state.goal;
+  goalInput.addEventListener("input", function () {
+    state.goal = Number(goalInput.value) || 0;
+    save(STORAGE_KEYS.goal, state.goal);
+    renderCalories();
+  });
+
+  document.getElementById("cal-prev").addEventListener("click", function () {
+    var d = keyToDate(state.calDate);
+    d.setDate(d.getDate() - 1);
+    state.calDate = todayKey(d);
+    renderCalories();
+  });
+  document.getElementById("cal-next").addEventListener("click", function () {
+    var d = keyToDate(state.calDate);
+    d.setDate(d.getDate() + 1);
+    state.calDate = todayKey(d);
+    renderCalories();
+  });
+
+  function keyToDate(key) {
+    var parts = key.split("-").map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+
+  document.getElementById("add-food-btn").addEventListener("click", function () {
+    var name = document.getElementById("food-name").value.trim();
+    var cal = Number(document.getElementById("food-cal").value) || 0;
+    var protein = Number(document.getElementById("food-protein").value) || 0;
+
+    if (!name || cal <= 0) {
+      alert("Enter a food name and calorie amount.");
+      return;
+    }
+
+    if (!state.food[state.calDate]) state.food[state.calDate] = [];
+    state.food[state.calDate].push({ id: uid(), name: name, cal: cal, protein: protein });
+    save(STORAGE_KEYS.food, state.food);
+
+    document.getElementById("food-name").value = "";
+    document.getElementById("food-cal").value = "";
+    document.getElementById("food-protein").value = "";
+    renderCalories();
+  });
+
+  function renderCalories() {
+    document.getElementById("cal-date-label").textContent = formatDateLabel(state.calDate);
+    var entries = state.food[state.calDate] || [];
+    var total = entries.reduce(function (sum, e) { return sum + e.cal; }, 0);
+    var totalProtein = entries.reduce(function (sum, e) { return sum + (e.protein || 0); }, 0);
+    var goal = state.goal || 0;
+    var remaining = goal - total;
+    var pct = goal > 0 ? Math.min(100, Math.round((total / goal) * 100)) : 0;
+
+    var summaryEl = document.getElementById("cal-summary");
+    summaryEl.innerHTML =
+      '<div class="stat-grid">' +
+      '<div class="stat-box"><div class="num">' + total.toLocaleString() + '</div><div class="lbl">Consumed</div></div>' +
+      '<div class="stat-box"><div class="num">' + (remaining < 0 ? '+' + Math.abs(remaining).toLocaleString() : remaining.toLocaleString()) + '</div><div class="lbl">' + (remaining < 0 ? 'Over Goal' : 'Remaining') + '</div></div>' +
+      '<div class="stat-box"><div class="num">' + totalProtein.toLocaleString() + 'g</div><div class="lbl">Protein</div></div>' +
+      '</div>';
+
+    document.getElementById("cal-progress").style.width = pct + "%";
+    document.getElementById("cal-progress").style.background = remaining < 0
+      ? "var(--danger)"
+      : "linear-gradient(90deg, var(--accent), var(--accent-2))";
+
+    var listEl = document.getElementById("food-list");
+    listEl.innerHTML = "";
+    if (entries.length === 0) {
+      listEl.innerHTML = '<div class="empty">No food logged for this day.</div>';
+      return;
+    }
+    entries.forEach(function (e) {
+      var row = document.createElement("div");
+      row.className = "food-item";
+      row.innerHTML =
+        '<div><div class="fname">' + escapeHtml(e.name) + '</div>' +
+        '<div class="fsub">' + e.cal + ' kcal' + (e.protein ? ' &middot; ' + e.protein + 'g protein' : '') + '</div></div>';
+
+      var delBtn = document.createElement("button");
+      delBtn.className = "icon-danger";
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", function () {
+        state.food[state.calDate] = state.food[state.calDate].filter(function (x) { return x.id !== e.id; });
+        save(STORAGE_KEYS.food, state.food);
+        renderCalories();
+      });
+      row.appendChild(delBtn);
+      listEl.appendChild(row);
+    });
+  }
+
+  renderCalories();
+})();
+</script>
+</body>
+</html>
